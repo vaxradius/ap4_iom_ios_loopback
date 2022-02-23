@@ -40,6 +40,9 @@
 #include "am_bsp.h"
 #include "am_util.h"
 
+#define     IOM_MODULE          1
+#define     USE_SPI             1   // 0 = I2C, 1 = SPI
+
 //*****************************************************************************
 //
 // Main function.
@@ -52,8 +55,8 @@ main(void)
 	{
 		.eCacheCfg    = AM_HAL_PWRCTRL_CACHE_ALL,
 		.bRetainCache = true,
-		.eDTCMCfg     = AM_HAL_PWRCTRL_DTCM_8K,
-		.eRetainDTCM  = AM_HAL_PWRCTRL_DTCM_8K,
+		.eDTCMCfg     = AM_HAL_PWRCTRL_DTCM_128K,
+		.eRetainDTCM  = AM_HAL_PWRCTRL_DTCM_128K,
 		.bEnableNVM0  = true,
 		.bRetainNVM0  = false
 	};
@@ -100,6 +103,12 @@ main(void)
 	//
 	am_util_stdio_terminal_clear();
 	am_util_stdio_printf("ap4_iom_ios_loopback Example\n");
+
+
+
+	ios_set_up(USE_SPI);
+	am_util_delay_ms(50);
+	iom_set_up(IOM_MODULE, USE_SPI);
 
 	//
 	// We are done printing.

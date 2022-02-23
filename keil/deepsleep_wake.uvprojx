@@ -393,6 +393,16 @@
               <FileType>1</FileType>
               <FilePath>../src/deepsleep_wake.c</FilePath>
             </File>
+            <File>
+              <FileName>ios.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\ios.c</FilePath>
+            </File>
+            <File>
+              <FileName>iom.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\iom.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
