@@ -10,12 +10,13 @@
       <TargetName>deepsleep_wake</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pArmCC></pArmCC>
+      <pCCUsed>5060960::V5.06 update 7 (build 960)::.\ARMCC</pCCUsed>
+      <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>AMAP42KK-KBR</Device>
           <Vendor>Ambiq Micro</Vendor>
-          <PackID>AmbiqMicro.Apollo_DFP.1.0.5</PackID>
+          <PackID>AmbiqMicro.Apollo_DFP.1.2.8</PackID>
           <PackURL>http://s3.asia.ambiqmicro.com/pack/</PackURL>
           <Cpu>IROM(0x00000000,0x100000) IRAM(0x10000000,0x60000) CPUTYPE("Cortex-M4") FPU2 CLOCK(48000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -183,6 +184,8 @@
             <hadXRAM>0</hadXRAM>
             <uocXRam>0</uocXRam>
             <RvdsVP>2</RvdsVP>
+            <RvdsMve>0</RvdsMve>
+            <RvdsCdeCp>0</RvdsCdeCp>
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
@@ -349,7 +352,7 @@
             <NoWarn>0</NoWarn>
             <uSurpInc>0</uSurpInc>
             <useXO>0</useXO>
-            <uClangAs>0</uClangAs>
+            <ClangAsOpt>4</ClangAsOpt>
             <VariousControls>
               <MiscControls></MiscControls>
               <Define></Define>
@@ -403,16 +406,6 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>devices</GroupName>
-          <Files>
-            <File>
-              <FileName>am_devices_led.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../../../../../../devices/am_devices_led.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>keil</GroupName>
           <Files>
             <File>
@@ -448,4 +441,3 @@
   </RTE>
 
 </Project>
-
