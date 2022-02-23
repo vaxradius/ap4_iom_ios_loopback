@@ -52,6 +52,23 @@ void iom_callback(void *pCallbackCtxt, uint32_t transactionStatus)
 	bTransationDone = true;
 }
 
+
+
+void floating_point_operation(void)
+{
+	float fA = 976.123f;
+	float fB = -123.777f;
+	float fC = 898.33f;
+
+	//
+	// Enable floating point.
+	//
+	am_hal_sysctrl_fpu_enable();
+	am_hal_sysctrl_fpu_stacking_enable(true);
+
+	am_util_stdio_printf("%.3f \n", fA*fB/fC);
+
+}
 //*****************************************************************************
 //
 // Main function.
@@ -115,7 +132,7 @@ main(void)
 	am_util_stdio_terminal_clear();
 	am_util_stdio_printf("ap4_iom_ios_loopback Example\n");
 
-
+	floating_point_operation();
 
 	ios_set_up(USE_SPI);
 	am_util_delay_ms(50);
