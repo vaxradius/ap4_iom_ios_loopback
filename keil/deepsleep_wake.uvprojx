@@ -403,6 +403,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\iom.c</FilePath>
             </File>
+            <File>
+              <FileName>am_hal_iom.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\mcu\apollo4b\hal\mcu\am_hal_iom.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -412,6 +417,11 @@
               <FileName>am_util_stdio.c</FileName>
               <FileType>1</FileType>
               <FilePath>../../../../../../utils/am_util_stdio.c</FilePath>
+            </File>
+            <File>
+              <FileName>am_util_delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\utils\am_util_delay.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -43,6 +43,15 @@
 #define     IOM_MODULE          1
 #define     USE_SPI             1   // 0 = I2C, 1 = SPI
 
+#define IOSOFFSET_WRITE_INTEN       0x78
+
+bool bTransationDone = false;
+
+void iom_callback(void *pCallbackCtxt, uint32_t transactionStatus)
+{
+	bTransationDone = true;
+}
+
 //*****************************************************************************
 //
 // Main function.
@@ -51,6 +60,8 @@
 int
 main(void)
 {
+	uint32_t ioIntEnable;
+
 	am_hal_pwrctrl_mcu_memory_config_t McuMemCfg =
 	{
 		.eCacheCfg    = AM_HAL_PWRCTRL_CACHE_ALL,
@@ -109,6 +120,18 @@ main(void)
 	ios_set_up(USE_SPI);
 	am_util_delay_ms(50);
 	iom_set_up(IOM_MODULE, USE_SPI);
+
+	 am_hal_interrupt_master_enable();
+
+	/*blocking transfer*/
+	ioIntEnable = 0xA5;
+	iom_slave_write(USE_SPI, IOSOFFSET_WRITE_INTEN | 0x80, &ioIntEnable, 1);
+	ioIntEnable = 0x00;
+	iom_slave_read(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1);
+
+	/*non-blocking transfer*/
+	ioIntEnable = 0x00;
+	iom_slave_read_nonblocking(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1, iom_callback);
 
 	//
 	// We are done printing.

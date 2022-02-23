@@ -44,21 +44,12 @@
 
 #define     I2C_ADDR            0x10
 
-#define IOSOFFSET_WRITE_INTEN       0x78
-#define IOSOFFSET_WRITE_INTCLR      0x7A
-#define IOSOFFSET_WRITE_CMD         0x00
-#define IOSOFFSET_READ_INTSTAT      0x79
-#define IOSOFFSET_READ_FIFO         0x7F
-#define IOSOFFSET_READ_FIFOCTR      0x7C
-
-
 //*****************************************************************************
 //
 // Global message buffer for the IO master.
 //
 //*****************************************************************************
-#define AM_TEST_RCV_BUF_SIZE    1024 // Max Size we can receive is 1023
-uint8_t g_pui8RcvBuf[AM_TEST_RCV_BUF_SIZE];
+uint32_t DMATCBBuffer[256]; // For non-blocking transfer
 
 
 void *g_IOMHandle;
@@ -73,6 +64,12 @@ static am_hal_iom_config_t g_sIOMSpiConfig =
 	.eInterfaceMode = AM_HAL_IOM_SPI_MODE,
 	.ui32ClockFreq = AM_HAL_IOM_1MHZ,
 	.eSpiMode = AM_HAL_IOM_SPI_MODE_0,
+	//
+	// Non-Blocking transaction memory configuration
+	// Set length and pointer to Transfer Control Buffer.
+	// Length is in 4 byte multiples
+	.pNBTxnBuf = DMATCBBuffer,
+       .ui32NBTxnBufLength = sizeof(DMATCBBuffer) / 4,
 };
 
 #define MAX_SPI_SIZE    1023
@@ -112,6 +109,36 @@ void iom_slave_read(bool bSpi, uint32_t offset, uint32_t *pBuf, uint32_t size)
 	am_hal_iom_blocking_transfer(g_IOMHandle, &Transaction);
 }
 
+
+void iom_slave_read_nonblocking(bool bSpi, uint32_t offset, uint32_t *pBuf, uint32_t size, am_hal_iom_callback_t pfnCallback)
+{
+	am_hal_iom_transfer_t       Transaction;
+
+	Transaction.ui32InstrLen    = 1;
+#if defined(AM_PART_APOLLO4B)
+	Transaction.ui64Instr = offset;
+#else
+	Transaction.ui32Instr = offset;
+#endif
+	Transaction.eDirection      = AM_HAL_IOM_RX;
+	Transaction.ui32NumBytes    = size;
+	Transaction.pui32RxBuffer   = pBuf;
+	Transaction.bContinue       = false;
+	Transaction.ui8RepeatCount  = 0;
+	Transaction.ui32PauseCondition = 0;
+	Transaction.ui32StatusSetClr = 0;
+
+	if ( bSpi )
+	{
+		Transaction.uPeerInfo.ui32SpiChipSelect = AM_BSP_IOM0_CS_CHNL;
+	}
+	else
+	{
+		Transaction.uPeerInfo.ui32I2CDevAddr = I2C_ADDR;
+	}
+	am_hal_iom_nonblocking_transfer(g_IOMHandle, &Transaction, pfnCallback, NULL);
+}
+
 void iom_slave_write(bool bSpi, uint32_t offset, uint32_t *pBuf, uint32_t size)
 {
 	am_hal_iom_transfer_t       Transaction;
@@ -143,7 +170,6 @@ void iom_slave_write(bool bSpi, uint32_t offset, uint32_t *pBuf, uint32_t size)
 
 void iom_set_up(uint32_t iomModule, bool bSpi)
 {
-	uint32_t ioIntEnable;
 	//
 	// Initialize the IOM.
 	//
@@ -180,11 +206,29 @@ void iom_set_up(uint32_t iomModule, bool bSpi)
 	// Enable the IOM.
 	//
 	am_hal_iom_enable(g_IOMHandle);
-	ioIntEnable = 0xA5;
-	iom_slave_write(bSpi, IOSOFFSET_WRITE_INTEN | 0x80, &ioIntEnable, 1);
-	ioIntEnable = 0x00;
-	iom_slave_read(bSpi, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1);
 
+	am_hal_iom_interrupt_enable(g_IOMHandle, AM_HAL_IOM_INT_DCMP);
+
+	//
+	// Enable the iom interrupt in the NVIC.
+	//
+	NVIC_ClearPendingIRQ((IRQn_Type)(IOMSTR0_IRQn + iomModule));
+	NVIC_EnableIRQ((IRQn_Type)(IOMSTR0_IRQn + iomModule));
+	
+}
+
+void am_iomaster1_isr(void)
+{
+    uint32_t ui32Status;
+
+    if (!am_hal_iom_interrupt_status_get(g_IOMHandle, true, &ui32Status))
+    {
+        if ( ui32Status )
+        {
+            am_hal_iom_interrupt_clear(g_IOMHandle, ui32Status);
+            am_hal_iom_interrupt_service(g_IOMHandle, ui32Status);
+        }
+    }
 }
 
 
