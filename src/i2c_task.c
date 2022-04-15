@@ -1,5 +1,13 @@
 //*****************************************************************************
 //
+//! @file i2c_task.c
+//!
+//! @brief Task to handle radio operation.
+//!
+//*****************************************************************************
+
+//*****************************************************************************
+//
 // Copyright (c) 2021, Ambiq Micro, Inc.
 // All rights reserved.
 //
@@ -36,126 +44,87 @@
 //
 //*****************************************************************************
 
+//*****************************************************************************
+//
+// Global includes for this project.
+//
+//*****************************************************************************
 #include "am_mcu_apollo.h"
 #include "am_bsp.h"
 #include "am_util.h"
-#include "am_util_debug.h"
+//*****************************************************************************
+//
+// FreeRTOS include files.
+//
+//*****************************************************************************
+#include "FreeRTOS.h"
+#include "task.h"
+#include "portmacro.h"
+#include "portable.h"
+#include "semphr.h"
+#include "event_groups.h"
 
-#include "rtos.h"
+#define     IOM_MODULE          1
+#define     USE_SPI             0   // 0 = I2C, 1 = SPI
 
-void floating_point_operation(void)
+#define IOSOFFSET_WRITE_INTEN       0x78
+
+bool bTransationDone = false;
+
+void iom_callback(void *pCallbackCtxt, uint32_t transactionStatus)
 {
-	float fA = 976.123f;
-	float fB = -123.777f;
-	float fC = 898.33f;
-
-	//
-	// Enable the floating point module, and configure the core for lazy
-	// stacking.
-	//
-	//am_hal_sysctrl_fpu_enable();
-	//am_hal_sysctrl_fpu_stacking_enable(true);
-
-	am_util_debug_printf("%.3f \n", fA*fB/fC);
-
+	bTransationDone = true;
 }
 
 //*****************************************************************************
 //
-// Enable printing to the console.
+// i2c task handle.
+//
+//*****************************************************************************
+TaskHandle_t i2c_task_handle;
+
+//*****************************************************************************
+//
+// Perform initial setup for the i2c task.
 //
 //*****************************************************************************
 void
-enable_print_interface(void)
+i2cTaskSetup(void)
 {
-    //
-    // Initialize a debug printing interface.
-    //
-    am_bsp_itm_printf_enable();
+	//NVIC_SetPriority(COOPER_IOM_IRQn, NVIC_configMAX_SYSCALL_INTERRUPT_PRIORITY);
+	//NVIC_SetPriority(AM_COOPER_IRQn, NVIC_configMAX_SYSCALL_INTERRUPT_PRIORITY);
+
+	ios_set_up(USE_SPI);
+	am_util_delay_ms(50);
+	iom_set_up(IOM_MODULE, USE_SPI);
 }
 
 //*****************************************************************************
 //
-// Main Function
+// Short Description.
 //
 //*****************************************************************************
-int
-main(void)
+void
+i2cTask(void *pvParameters)
 {
-	am_hal_pwrctrl_mcu_memory_config_t McuMemCfg =
+	uint32_t ioIntEnable;
+	/* Block for 500ms. */
+	const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+
+	while(1)
 	{
-		.eCacheCfg    = AM_HAL_PWRCTRL_CACHE_ALL,
-		.bRetainCache = true,
-		.eDTCMCfg     = AM_HAL_PWRCTRL_DTCM_128K,
-		.eRetainDTCM  = AM_HAL_PWRCTRL_DTCM_128K,
-		.bEnableNVM0  = true,
-		.bRetainNVM0  = false
+
+		/*blocking transfer*/
+		ioIntEnable = 0xA5;
+		iom_slave_write(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1);
+		ioIntEnable = 0x00;
+		iom_slave_read(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1);
+
+		/*non-blocking transfer*/
+		//ioIntEnable = 0x00;
+		//iom_slave_read_nonblocking(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1, iom_callback);
+		
+		vTaskDelay( xDelay );
+
 	};
-
-	am_hal_pwrctrl_sram_memcfg_t SRAMMemCfg =
-	{
-		.eSRAMCfg         = AM_HAL_PWRCTRL_SRAM_NONE,
-		.eActiveWithMCU   = AM_HAL_PWRCTRL_SRAM_NONE,
-		.eActiveWithDSP   = AM_HAL_PWRCTRL_SRAM_NONE,
-		.eSRAMRetain      = AM_HAL_PWRCTRL_SRAM_NONE
-	};
-
-
-	//
-	// Enable the floating point module, and configure the core for lazy
-	// stacking.
-	//
-	am_hal_sysctrl_fpu_enable();
-	am_hal_sysctrl_fpu_stacking_enable(true);
-
-
-	//
-	// Set the cache configuration
-	//
-	am_hal_cachectrl_config(&am_hal_cachectrl_defaults);
-	am_hal_cachectrl_enable();
-
-
-	//
-	// Configure the board for low power.
-	//
-	am_bsp_low_power_init();
-	//
-	// Turn off crypto
-	//
-	am_hal_pwrctrl_control(AM_HAL_PWRCTRL_CONTROL_CRYPTO_POWERDOWN, NULL);
-
-
-	//
-	// Turn off unneeded memory
-	//
-	am_hal_pwrctrl_mcu_memory_config(&McuMemCfg);
-	am_hal_pwrctrl_sram_config(&SRAMMemCfg);
-
-	// Enable printing to the console.
-	//
-#ifdef AM_DEBUG_PRINTF
-	enable_print_interface();
-	//
-	// Print the banner.
-	//
-	am_util_stdio_terminal_clear();
-	am_util_debug_printf("FreeRTOS Example\n");
-	floating_point_operation();
-
-#endif
-
-	//
-	// Run the application.
-	//
-	run_tasks();
-
-	//
-	// We shouldn't ever get here.
-	//
-	while (1)
-	{
-	}
-
 }
-

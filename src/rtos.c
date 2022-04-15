@@ -52,13 +52,14 @@
 
 #include "am_mcu_apollo.h"
 #include "am_bsp.h"
+#include "am_util_debug.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "portmacro.h"
 #include "portable.h"
-//#include "ble_freertos_fit_lp.h"
+#include "i2c_task.h"
 
 //*****************************************************************************
 //
@@ -162,17 +163,17 @@ setup_task(void *pvParameters)
     //
     // Print a debug message.
     //
-    //am_util_debug_printf("Running setup tasks...\r\n");
+    am_util_debug_printf("Running setup tasks...\r\n");
 
     //
     // Run setup functions.
     //
-    //RadioTaskSetup();
+    i2cTaskSetup();
 
     //
     // Create the functional tasks
     //
-    //xTaskCreate(RadioTask, "RadioTask", 512, 0, 3, &radio_task_handle);
+    xTaskCreate(i2cTask, "i2cTask", 512, 0, 3, &i2c_task_handle);
     //
     // The setup operations are complete, so suspend the setup task now.
     //

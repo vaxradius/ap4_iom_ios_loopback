@@ -413,6 +413,16 @@
               <FileType>1</FileType>
               <FilePath>..\src\rtos.c</FilePath>
             </File>
+            <File>
+              <FileName>i2c_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\i2c_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>am_hal_cmdq.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\mcu\apollo4b\hal\mcu\am_hal_cmdq.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
