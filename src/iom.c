@@ -49,7 +49,7 @@
 // Global message buffer for the IO master.
 //
 //*****************************************************************************
-uint32_t DMATCBBuffer[256]; // For non-blocking transfer
+uint32_t iomDMATCBBuffer[256]; // For non-blocking transfer
 
 
 void *g_IOMHandle;
@@ -68,8 +68,8 @@ static am_hal_iom_config_t g_sIOMSpiConfig =
 	// Non-Blocking transaction memory configuration
 	// Set length and pointer to Transfer Control Buffer.
 	// Length is in 4 byte multiples
-	.pNBTxnBuf = DMATCBBuffer,
-       .ui32NBTxnBufLength = sizeof(DMATCBBuffer) / 4,
+	.pNBTxnBuf = iomDMATCBBuffer,
+       .ui32NBTxnBufLength = sizeof(iomDMATCBBuffer) / 4,
 };
 
 #define MAX_SPI_SIZE    1023
@@ -82,11 +82,11 @@ static am_hal_iom_config_t g_sIOMI2cConfig =
 	// Non-Blocking transaction memory configuration
 	// Set length and pointer to Transfer Control Buffer.
 	// Length is in 4 byte multiples
-	.pNBTxnBuf = DMATCBBuffer,
-       .ui32NBTxnBufLength = sizeof(DMATCBBuffer) / 4,
+	.pNBTxnBuf = iomDMATCBBuffer,
+       .ui32NBTxnBufLength = sizeof(iomDMATCBBuffer) / 4,
 };
 
-void iom_slave_read(bool bSpi, uint32_t offset, uint32_t *pBuf, uint32_t size)
+void iom_slave_read_1(bool bSpi, uint32_t offset, uint32_t *pBuf, uint32_t size)
 {
 	am_hal_iom_transfer_t       Transaction;
 

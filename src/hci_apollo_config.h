@@ -1,9 +1,9 @@
 //*****************************************************************************
 //
-//! @file i2c_task.c
+//! @file hci_apollo_config.h
 //!
-//! @brief Task to handle radio operation.
-//!
+//! @brief This file describes the physical aspects of the HCI conection.
+//
 //*****************************************************************************
 
 //*****************************************************************************
@@ -44,88 +44,34 @@
 //
 //*****************************************************************************
 
-//*****************************************************************************
-//
-// Global includes for this project.
-//
-//*****************************************************************************
-#include "am_mcu_apollo.h"
+#include <stdint.h>
 #include "am_bsp.h"
-#include "am_util.h"
-//*****************************************************************************
-//
-// FreeRTOS include files.
-//
-//*****************************************************************************
-#include "FreeRTOS.h"
-#include "task.h"
-#include "portmacro.h"
-#include "portable.h"
-#include "semphr.h"
-#include "event_groups.h"
 
-#define     IOM_MODULE          1
-#define     USE_SPI             0   // 0 = I2C, 1 = SPI
-
-#define IOSOFFSET_WRITE_INTEN       0x78
-
-bool bTransationDone = false;
-
-void iom_callback(void *pCallbackCtxt, uint32_t transactionStatus)
-{
-	bTransationDone = true;
-}
+#ifndef HCI_APOLLO_CONFIG_H
+#define HCI_APOLLO_CONFIG_H
 
 //*****************************************************************************
 //
-// i2c task handle.
+// Pin numbers and configuration.
+//
+// NOTE: RTS, CTS, and RESET are implemented as GPIOs, so no "CFG" field is
+// needed.
 //
 //*****************************************************************************
-TaskHandle_t i2c_task_handle;
+//#define HCI_APOLLO_POWER_PIN            AM_BSP_GPIO_EM9304_POWER
+//#define HCI_APOLLO_POWER_CFG            AM_BSP_GPIO_CFG_EM9304_POWER
 
-//*****************************************************************************
-//
-// Perform initial setup for the i2c task.
-//
-//*****************************************************************************
-void
-i2cTaskSetup(void)
-{
-	//NVIC_SetPriority(COOPER_IOM_IRQn, NVIC_configMAX_SYSCALL_INTERRUPT_PRIORITY);
-	//NVIC_SetPriority(AM_COOPER_IRQn, NVIC_configMAX_SYSCALL_INTERRUPT_PRIORITY);
-
-	ios_set_up(USE_SPI);
-	am_util_delay_ms(50);
-	iom_set_up(IOM_MODULE, USE_SPI);
-	//NVIC_SetPriority((IRQn_Type)(IOMSTR0_IRQn + IOM_MODULE), 0);
-}
+#define HCI_APOLLO_RESET_PIN            AM_BSP_GPIO_EM9304_RESET
 
 //*****************************************************************************
 //
-// Short Description.
+// Other options.
+//
+// These options are provided in case your board setup is a little more
+// unusual. Most boards shouldn't need these features. If in doubt, leave all
+// of these features disabled.
 //
 //*****************************************************************************
-void
-i2cTask(void *pvParameters)
-{
-	uint32_t ioIntEnable;
-	/* Block for 500ms. */
-	const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+#define HCI_APOLLO_CFG_OVERRIDE_ISR         1 // Override the exactle UART ISR
 
-	while(1)
-	{
-
-		/*blocking transfer*/
-		ioIntEnable = 0xA5;
-		iom_slave_write(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1);
-		ioIntEnable = 0x00;
-		iom_slave_read_1(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1);
-
-		/*non-blocking transfer*/
-		ioIntEnable = 0x00;
-		iom_slave_read_nonblocking(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1, iom_callback);
-		
-		vTaskDelay( xDelay );
-
-	};
-}
+#endif // HCI_APOLLO_CONFIG_H
