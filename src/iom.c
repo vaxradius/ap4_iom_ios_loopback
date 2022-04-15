@@ -78,6 +78,12 @@ static am_hal_iom_config_t g_sIOMI2cConfig =
 {
 	.eInterfaceMode = AM_HAL_IOM_I2C_MODE,
 	.ui32ClockFreq  = AM_HAL_IOM_1MHZ,
+	//
+	// Non-Blocking transaction memory configuration
+	// Set length and pointer to Transfer Control Buffer.
+	// Length is in 4 byte multiples
+	.pNBTxnBuf = DMATCBBuffer,
+       .ui32NBTxnBufLength = sizeof(DMATCBBuffer) / 4,
 };
 
 void iom_slave_read(bool bSpi, uint32_t offset, uint32_t *pBuf, uint32_t size)
@@ -145,7 +151,10 @@ void iom_slave_write(bool bSpi, uint32_t offset, uint32_t *pBuf, uint32_t size)
 
 	Transaction.ui32InstrLen    = 1;
 #if defined(AM_PART_APOLLO4B)
-	Transaction.ui64Instr = offset;
+	if(bSpi)
+		Transaction.ui64Instr = (offset | 0x80); //Write bit for IOS SPI
+	else
+		Transaction.ui64Instr = offset;
 #else
 	Transaction.ui32Instr = offset;
 #endif
