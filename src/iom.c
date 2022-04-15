@@ -235,7 +235,7 @@ void am_iomaster1_isr(void)
         if ( ui32Status )
         {
             am_hal_iom_interrupt_clear(g_IOMHandle, ui32Status);
-            am_hal_iom_interrupt_service(g_IOMHandle, ui32Status);
+            am_hal_iom_interrupt_service(g_IOMHandle, ui32Status); //ui32Status & ~(0x24) --> Clear 0x24 if  step by step debugging
         }
     }
 }

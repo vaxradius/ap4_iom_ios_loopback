@@ -97,6 +97,7 @@ i2cTaskSetup(void)
 	ios_set_up(USE_SPI);
 	am_util_delay_ms(50);
 	iom_set_up(IOM_MODULE, USE_SPI);
+	//NVIC_SetPriority((IRQn_Type)(IOMSTR0_IRQn + IOM_MODULE), 0);
 }
 
 //*****************************************************************************
@@ -121,8 +122,8 @@ i2cTask(void *pvParameters)
 		iom_slave_read(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1);
 
 		/*non-blocking transfer*/
-		//ioIntEnable = 0x00;
-		//iom_slave_read_nonblocking(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1, iom_callback);
+		ioIntEnable = 0x00;
+		iom_slave_read_nonblocking(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1, iom_callback);
 		
 		vTaskDelay( xDelay );
 
