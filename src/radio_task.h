@@ -1,8 +1,8 @@
 //*****************************************************************************
 //
-//! @file i2c_task.c
+//! @file radio_task.h
 //!
-//! @brief Task to handle radio operation.
+//! @brief Functions and variables related to the radio task.
 //!
 //*****************************************************************************
 
@@ -44,88 +44,22 @@
 //
 //*****************************************************************************
 
-//*****************************************************************************
-//
-// Global includes for this project.
-//
-//*****************************************************************************
-#include "am_mcu_apollo.h"
-#include "am_bsp.h"
-#include "am_util.h"
-//*****************************************************************************
-//
-// FreeRTOS include files.
-//
-//*****************************************************************************
-#include "FreeRTOS.h"
-#include "task.h"
-#include "portmacro.h"
-#include "portable.h"
-#include "semphr.h"
-#include "event_groups.h"
-
-#define     IOM_MODULE          1
-#define     USE_SPI             0   // 0 = I2C, 1 = SPI
-
-#define IOSOFFSET_WRITE_INTEN       0x78
-
-bool bTransationDone = false;
-
-void iom_callback(void *pCallbackCtxt, uint32_t transactionStatus)
-{
-	bTransationDone = true;
-}
+#ifndef RADIO_TASK_H
+#define RADIO_TASK_H
 
 //*****************************************************************************
 //
-// i2c task handle.
+// Radio task handle.
 //
 //*****************************************************************************
-TaskHandle_t i2c_task_handle;
-
-//*****************************************************************************
-//
-// Perform initial setup for the i2c task.
-//
-//*****************************************************************************
-void
-i2cTaskSetup(void)
-{
-	//NVIC_SetPriority(COOPER_IOM_IRQn, NVIC_configMAX_SYSCALL_INTERRUPT_PRIORITY);
-	//NVIC_SetPriority(AM_COOPER_IRQn, NVIC_configMAX_SYSCALL_INTERRUPT_PRIORITY);
-
-	ios_set_up(USE_SPI);
-	am_util_delay_ms(50);
-	iom_set_up(IOM_MODULE, USE_SPI);
-	//NVIC_SetPriority((IRQn_Type)(IOMSTR0_IRQn + IOM_MODULE), 0);
-}
+extern TaskHandle_t radio_task_handle;
 
 //*****************************************************************************
 //
-// Short Description.
+// External function definitions.
 //
 //*****************************************************************************
-void
-i2cTask(void *pvParameters)
-{
-	uint32_t ioIntEnable;
-	/* Block for 1000ms. */
-	const TickType_t xDelay = 1000 / portTICK_PERIOD_MS;
+extern void RadioTaskSetup(void);
+extern void RadioTask(void *pvParameters);
 
-	while(1)
-	{
-
-		/*blocking transfer*/
-		ioIntEnable = 0xA5;
-		iom_slave_write(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1);
-		ioIntEnable = 0x00;
-		iom_slave_read_1(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1);
-
-		/*non-blocking transfer*/
-		ioIntEnable = 0x00;
-		iom_slave_read_nonblocking(USE_SPI, IOSOFFSET_WRITE_INTEN, &ioIntEnable, 1, iom_callback);
-		
-		vTaskDelay( xDelay );
-
-	};
-}
+#endif // RADIO_TASK_H

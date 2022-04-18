@@ -60,6 +60,7 @@
 #include "portmacro.h"
 #include "portable.h"
 #include "i2c_task.h"
+#include "radio_task.h"
 
 //*****************************************************************************
 //
@@ -169,11 +170,13 @@ setup_task(void *pvParameters)
     // Run setup functions.
     //
     i2cTaskSetup();
+    RadioTaskSetup();
 
     //
     // Create the functional tasks
     //
     xTaskCreate(i2cTask, "i2cTask", 512, 0, 3, &i2c_task_handle);
+    xTaskCreate(RadioTask, "RadioTask", 512, 0, 3, &radio_task_handle);
     //
     // The setup operations are complete, so suspend the setup task now.
     //
